@@ -1,13 +1,13 @@
 ---
 layout: post
-category : lessons
-tagline: "Supporting tagline"
-tags : [intro, beginner, jekyll, tutorial]
+category : tutorial
+title: "Pipelines in Lua"
+tagline: "<br />Experimenting with alternative concurrency models"
+tags : [leda, tutorial]
 ---
 {% include JB/setup %}
 
-This Jekyll introduction will outline specifically  what Jekyll is and why you would want to use it.
-Directly following the intro we'll learn exactly _how_ Jekyll does what it does.
+
 
 ## Overview 
 
@@ -18,8 +18,10 @@ dynamic components such as templates, partials, liquid code, markdown, etc. Jeky
 
 ### Examples
 
+
 This website is created with Jekyll. [Other Jekyll websites](https://github.com/mojombo/jekyll/wiki/Sites).
 
+<div style="width: 660px; height:360px;"><iframe src="https://showterm.herokuapp.com/7b5f8d42ba021511e627e" width="660" height="360" style="border: 1px solid #444"> a </iframe></div>
 
 
 ### What does Jekyll Do?
