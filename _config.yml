@@ -9,8 +9,8 @@ pygments: true
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
 #
-title : Tiago Salmito - In the pipeline
-tagline: My personal blog
+title : Tiago Salmito - Through the pipeline
+tagline: My blog
 author :
   name : Tiago Salmito
   email : tiago@salmito.com
