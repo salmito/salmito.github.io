@@ -19,9 +19,9 @@ Throughout my posts, I&rsquo;ll talk about concurrence and parallelism.
 Concurrence is a property that occurs when more than one process run simultaneously, potentially interacting with each other and competing for resources.
 Parallelism is a property of systems that can execute more than one process *at the same time*. 
 
-In my thesis, I discussed about the staged event-driven concurrency model and how it can be tweaked in order to decouple decisions about the logic of your applications from decisions about the execution environment.
+In my thesis, I discussed about the staged event-driven concurrency model and how it can be tweaked to decouple decisions about the logic of your applications from decisions about the execution environment.
 
-[Leda](http://leda.co) was implemented as a result of my research, and, in this blog, I&rsquo;ll cover come aspects of its architecture and execution dynamics.
+[Leda](http://leda.co) was implemented as a result of my research, and, in this blog, I&rsquo;ll cover some aspects of its architecture and execution dynamics.
 
 
 ### Possible future posts
