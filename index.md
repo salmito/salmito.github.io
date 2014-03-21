@@ -5,7 +5,7 @@ tagline: <br />Assorted thoughts in my head...
 ---
 {% include JB/setup %}
 
-* Leda, my personal project! [Leda.co](http://leda.co/)
+* Personal projects: [Leda.co](http://leda.co/) [Lstage](http://github.com/Salmito/lstage)
 * Curriculum: [lattes](http://lattes.cnpq.br/9064058945131816)
 * Public key: [here](tiago@salmito.com.pub) [gz](tiago@salmito.com.pub.gz) (confirm fingerprint)
 * Twitter: [TiagoBraw](http://twitter.com/TiagoBraw/)
