@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Welcome!
+title: Tiago Salmito
 tagline: <br />
 ---
 {% include JB/setup %}
