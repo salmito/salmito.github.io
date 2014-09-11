@@ -1,0 +1,1690 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+  "http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+<head><title>Understanding Hybrid Concurrency Models</title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+<meta name="generator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<meta name="originator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<!-- html --> 
+<meta name="src" content="rb-resd.tex"> 
+<meta name="date" content="2014-08-18 10:39:00"> 
+<link rel="stylesheet" type="text/css" href="rb-resd.css"> 
+</head><body 
+>
+   <div class="maketitle">
+
+<h2 class="titleHead">Understanding Hybrid
+Concurrency Models</h2>
+<!--tex4ht:inline--><div class="tabular"><table id="TBL-2" class="tabular" 
+cellspacing="0" cellpadding="0"  
+><colgroup id="TBL-2-1g"><col 
+id="TBL-2-1"></colgroup><tr  
+ style="vertical-align:baseline;" id="TBL-2-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-1-1"  
+class="td11">     <span 
+class="ptmb8t-x-x-110">Tiago Salmito, Ana L</span><span 
+class="ptmb8t-x-x-110">úcia de Moura &amp; Noemi Rodriguez           </span></td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-2-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-2-1"  
+class="td11">                                                       </td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-3-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-3-1"  
+class="td11">                  <sup><span 
+class="cmr-7">1</span></sup>Departmento de Informática                                          </td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-4-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-4-1"  
+class="td11">       Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)                </td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-5-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-5-1"  
+class="td11">Rua Marquês de São Vicente, 225 - CEP 22.451-900 - Rio de Janeiro - RJ - Brazil</td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-6-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-6-1"  
+class="td11">             {tsalmito | amoura | noemi}@inf.puc-rio.br                               </td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-7-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-7-1"  
+class="td11">                                                       </td></tr></table>                          </div>
+<br />
+   </div>
+   <div 
+class="abstract" 
+>
+<div class="center" 
+>
+<!--l. 61--><p class="noindent" >
+<!--l. 61--><p class="noindent" ><span 
+class="ptmb8t-x-x-120">Abstract</span></div>
+<!--l. 63--><p class="indent" >   <span 
+class="ptmri8t-">Over the last years a number of works have proposed</span>
+<span 
+class="ptmri8t-">hybrid concurrency models, combining threads and events,</span>
+<span 
+class="ptmri8t-">typically with a bias towards one of the paradigms. It is</span>
+<span 
+class="ptmri8t-">important to have a clear understanding of this combination</span>
+<span 
+class="ptmri8t-">and of its impact on concurrent and distributed programming.</span>
+<span 
+class="ptmri8t-">This work presents a classification of hybrid concurrent</span>
+<span 
+class="ptmri8t-">systems and describes a collection of representative systems</span>
+<span 
+class="ptmri8t-">within a common framework.</span>
+<!--l. 73--><p class="indent" >   <span 
+class="ptmbi8t-">Keywords:  </span><span 
+class="ptmri8t-">Hybrid concurrency, Thread, Events,</span>
+<span 
+class="ptmri8t-">Concurrent programming</span>
+   </div>
+   <h3 class="sectionHead"><span class="titlemark">1    </span> <a 
+ id="x1-10001"></a>Introduction</h3>
+<!--l. 1--><p class="noindent" >A concurrent system must, by definition, handle concurrent
+tasks. This can be done in a number of ways, the most popular
+of which are, to this day, threads and events. In some cases,
+there is an intuitive mapping of the tasks to be handled
+to the abstraction that will support them. It is natural,
+for instance, to design a web server using a separate
+thread for each incoming client request. Although several
+experiments have shown that event-based servers can achieve
+better results when requirements such as scalability and
+performance are taken into consideration&#x00A0;<span class="cite">[<a 
+href="#Xpariag2007comparing">19</a>,&#x00A0;<a 
+href="#Xpai1999flash">18</a>]</span>, the
+thread-based programming style is still widely considered the most adequate for this specific class of applications&#x00A0;<span class="cite">[<a 
+href="#Xvon">24</a>]</span>.
+                                               On the other hand, events are a suitable abstraction for
+                                               modelling, for instance, loosely-coupled interactions in
+                                               peer-to-peer distributed systems. Threads can be important in
+                                               this setting to harness the processing power available in
+                                               multicore systems, but they are not the natural programming
+                                               style.
+                                               <!--l. 21--><p class="indent" >      Although both abstractions &#8212; preemptive multithreading
+                                               and events &#8212; have had their share of criticisms&#x00A0;<span class="cite">[<a 
+href="#XOusterhout96whythreads">17</a>,&#x00A0;<a 
+href="#XLi:2007">14</a>,&#x00A0;<a 
+href="#Xvon">24</a>]</span>,
+                                               most concurrent systems today still force the programmer to
+                                               choose one of these approaches and to deal will all the
+                                               resulting disadvantages. Over the last years, however, systems
+                                               that combine the two concurrency models have been gaining
+                                               attention.
+                                               <!--l. 29--><p class="indent" >      This combination can occur in a variety of forms. For
+                                               instance, to protect event-based programs from blocking
+                                               themselves on synchronous invocations, several systems run
+                                               independent event loops in separate threads or launch new
+                                               threads when faced with blocking operations&#x00A0;<span class="cite">[<a 
+href="#Xpai1999flash">18</a>]</span>. Another
+                                               class of solutions seeks to minimize the effects of what Adya
+                                               and others&#x00A0;<span class="cite">[<a 
+href="#XAdya:2002">1</a>]</span> have called <span 
+class="ptmri8t-">stack-ripping </span>&#8212; the fact that no
+                                               local stack information is kept beween the execution of
+                                               different event handlers &#8212; by implicitly creating closures that
+                                               encapsulate state, making it available to the continuation of
+                                               their corresponding computations&#x00A0;<span class="cite">[<a 
+href="#Xsilvestre10">21</a>,&#x00A0;<a 
+href="#XHaller:2007:AUT:1764606.1764620">9</a>]</span>. In all of these
+                                               cases, only one concurrency model is presented to the
+                                               programmer, and the other is used as an implementation aid.
+                                               Some authors have proposed more sophisticated architectures
+                                               that intend to bridge the gap between the most adequate
+                                               programming style and the implementation advantages of the
+                                               alternative model. These architectures strive to enable
+                                               programmers to design parts of the application using threads,
+                                               where threads are the appropriate abstraction (such as
+
+per-client code in server applications), and parts using events,
+where they are more suitable (e.g. for asynchronous I/O
+interfaces)&#x00A0;<span class="cite">[<a 
+href="#XLi:2007">14</a>]</span>.
+<!--l. 53--><p class="indent" >   Although there is a reasonable amount of work addressing
+the combination of multithreading and events, there seems to
+be little discussion about the relationship among the different
+proposals and the application scenarios in which each one of
+them would be suitable. We are specifically interested in the
+role these models have in distributed systems. Current
+execution requirements often include elasticity and scalability,
+demanding the use of distributed resources, commonly
+available in clusters and in the increasingly popular cloud
+infrastructures. Therefore, we believe an important issue
+when analysing a concurrency model is whether it can be
+used in applications executing in these shared-nothing
+environments.
+<!--l. 66--><p class="indent" >   In this paper, we try to achieve a better understanding of
+concurrency models that combine threads and events, also
+called <span 
+class="ptmri8t-">hybrid systems</span>&#x00A0;<span class="cite">[<a 
+href="#XLi:2007">14</a>,&#x00A0;<a 
+href="#XGordon10">8</a>]</span>. We propose a classification of
+hybrid systems and discuss some proposals that fall into each
+of the identified hybrid concurrency classes, showing how
+they benefit from the combination of two concurrent
+models.
+<!--l. 1--><p class="indent" >    
+   <h3 class="sectionHead"><span class="titlemark">2    </span> <a 
+ id="x1-20002"></a>Hybrid concurrency models</h3>
+<!--l. 4--><p class="noindent" >Ousterhout&#x00A0;<span class="cite">[<a 
+href="#XOusterhout96whythreads">17</a>]</span> and von Behren&#x00A0;<span class="cite">[<a 
+href="#Xvon">24</a>]</span> are among the most
+cited contenders on the two sides of the events<span 
+class="cmsy-10">&#x00D7;</span>threads
+debate. It is interesting to view the combination of paradigms
+in light of their arguments. Ousterhout claims that
+events are easier to get started with: because there is no
+concurrency among handlers, there is no need to worry
+about synchronization or deadlock. Besides, he states
+that events are typically faster than threads on single
+CPUs, considering that there is no context switching or
+synchronization overhead. von Behren&#x00A0;<span class="cite">[<a 
+href="#Xvon">24</a>]</span> argues that
+many of these advantages are due to the cooperative
+multitasking model on which events are based, which can
+also be used as a basis for user-level threads. Another
+recurring issue in the debate is that about control flow. von
+Behren claims that event-based programming tends to
+obfuscate the control flow of applications: the frequent
+call-return pattern requires the programmer to manually
+maintain state in event-based programming, while threads
+model this pattern naturally. It seems that the discussion
+about the best model is intrinsically linked to the type of
+application at hand: von Behren focuses his discussion
+on high-concurrency servers. On the other hand, there
+are applications for which the call-return pattern is not
+the most appropriate: if, for instance, a client needs to
+trigger a reaction after having received a minimum number   of responses, a state machine may in fact be the best
+                                               alternative.
+                                               <!--l. 32--><p class="indent" >      Despite his criticisms, Ousterhout explicitly states that
+                                               threads should not be abandoned, and points out that they are
+                                               necessary when true CPU concurrency is needed, indicating
+                                               that it may be advantageous to combine threads and events in
+                                               a single application. In fact, the emergence of multicore
+                                               architectures, as well as the need to execute applications over
+                                               shared-nothing architectures to provide for elastic resource
+                                               usage, has led several authors to propose <span 
+class="ptmri8t-">hybrid </span>concurrency
+                                               models, combining threads and events, over the last decade
+                                               <span class="cite">[<a 
+href="#Xcapriccio">4</a>,&#x00A0;<a 
+href="#XDabek:2002:EPR:1133373.1133410">5</a>,&#x00A0;<a 
+href="#XHaller:2007:AUT:1764606.1764620">9</a>,&#x00A0;<a 
+href="#XMEDA">10</a>,&#x00A0;<a 
+href="#XLi:2007">14</a>,&#x00A0;<a 
+href="#XUpadhyaya:2007:EEC:1229428.1229433">22</a>,&#x00A0;<a 
+href="#XWelsh:2001:SAW:502059.502057">25</a>,&#x00A0;<a 
+href="#Xyoo2011incontext">26</a>]</span>.
+                                               <!--l. 43--><p class="indent" >      Figure&#x00A0;<a 
+href="#x1-20011">1<!--tex4ht:ref: fig:adyaaxes --></a> extends the graph used by Adya&#x00A0;<span class="cite">[<a 
+href="#XAdya:2002">1</a>]</span> &#8211; originally to
+                                               discuss the orthogonal natures of stack and task management
+                                               &#8211; with an additional axis that introduces parallelism as
+                                               provided by multi-CPU architectures. In plane (a), the
+                                               &#8220;multithreaded&#8221; region describes preemptive multithreading
+                                               with automatic stack management, as offered by operating
+                                               system threads. In the &#8220;event-driven programming&#8221; region,
+                                               handlers yield control to the event scheduler, requiring
+                                               manual effort for maintaining state information between
+                                               invocations. Adya argues that it is possible to use cooperative
+                                               task management while preserving the automatic stack
+                                               management that, according to him, make the programming
+                                               language &#8220;structured&#8221;. However, the proposed merged
+                                               solution contemplates only single-CPU environments.
+                                               In this work, we introduce a third axis in the graph, in
+                                               order to make it clear that we need to exploit multi-CPU
+                                               parallelism.
+                                               <!--l. 62--><p class="indent" >      <hr class="figure"><div class="figure" 
+>
+
+<a 
+ id="x1-20011"></a>
+
+<!--l. 64--><p class="noindent" ><img 
+src="rb-resd0x.png" alt="PIC" class="graphics"><!--tex4ht:graphics  
+name="rb-resd0x.png" src="pics/concurrencygraph.pdf"  
+-->
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;1: </span><span  
+class="content">Three axis concurrency graph.</span></div><!--tex4ht:label?: x1-20011 -->
+
+<!--l. 67--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 69--><p class="indent" >   In plane (b) of Figure&#x00A0;<a 
+href="#x1-20011">1<!--tex4ht:ref: fig:adyaaxes --></a>, the three original regions are
+projected into their counterparts in a multi-CPU environment.
+The &#8220;multithreaded&#8221; region maintains the same characteristics
+as before, except for the fact that now threads may be
+executed with real parallelism. The two regions on the left
+are the ones that will interest us. Both represent hybrid
+systems combining features of threads and events, but with
+different bias towards one of the two abstractions. We will
+use this bias as a basis for identifying, understanding
+and analyzing different classes of hybrid models. An
+<span 
+class="ptmri8t-">event-driven hybrid model </span>results from extending the
+classical, single-threaded, event-driven model to multi-CPU
+environments by running multiple event loops in parallel. In
+constrast, a <span 
+class="ptmri8t-">thread-based hybrid model </span>maintains the
+combination of cooperative multitasking and sequential
+control flow proposed by Adya, providing the programmer
+with thread-like abstractions.
+<!--l. 87--><p class="indent" >   The third model of hybrid systems that we have identified
+&#8211; the <span 
+class="ptmri8t-">staged model </span>&#8211; does not have a clear bias towards either
+threads or events, and exposes both abstractions to the
+programmer. Systems based on this model are typically
+decomposed into self-contained modules that communicate
+through event queues. Internally, modules use threads to
+handle events concurrently. This class of systems is largely
+inspired by the SEDA architecture&#x00A0;<span class="cite">[<a 
+href="#XWelsh:2001:SAW:502059.502057">25</a>]</span>, in which modules
+are called <span 
+class="ptmri8t-">stages</span>. In plane (b) of Figure&#x00A0;<a 
+href="#x1-20011">1<!--tex4ht:ref: fig:adyaaxes --></a>, we represent this
+alternative as a rectangle lying between hybrid thread-based
+and hybrid event-based systems.
+<!--l. 102--><p class="indent" >   In the next sections, we discuss each of the identitifed
+hybrid concurrency models in more detail, providing some
+examples of systems that fall into each category.
+   <h4 class="subsectionHead"><span class="titlemark">2.1    </span> <a 
+ id="x1-30002.1"></a>Event-driven Hybrid Concurrency</h4>
+<!--l. 84--><p class="noindent" >The event-driven hybrid concurrency model emphasizes the
+advantages of programming with events, mainly related to
+cooperative, user-level, multitasking, while eliminating the
+limitation of working with a single CPU. In order to support
+parallelism and benefit from current multicore architectures,
+the event-driven hybrid model uses two or more concurrent
+event-loops, typically one per CPU. Figure&#x00A0;<a 
+href="#x1-30012">2<!--tex4ht:ref: fig:event_hybrid_concurrency --></a> depicts a
+conceptual representation of the event-driven hybrid
+concurrency model.
+<!--l. 95--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+
+<a 
+ id="x1-30012"></a>
+
+<!--l. 97--><p class="noindent" ><img 
+src="rb-resd1x.png" alt="PIC" class="graphics"><!--tex4ht:graphics  
+name="rb-resd1x.png" src="pics/eventhybrid.pdf"  
+-->
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;2: </span><span  
+class="content">Event-driven hybrid concurrency model.</span></div><!--tex4ht:label?: x1-30012 -->
+
+<!--l. 100--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 102--><p class="indent" >   The introduction of parallelism among handlers brings the
+problem of synchronization back to light. If multiple
+event-handlers execute simultaneously with access to a global
+memory, the programmer will have to deal with the classic
+data-race problems. Event-driven hybrid models typically try
+to avoid this scenario, controlling access to global memory in
+different ways.
+<!--l. 110--><p class="indent" >   Conceptually, parallel event handlers could even be
+executed in different OS processes, thus eliminating the
+problem of shared memory and introducing the possibility of
+executing in shared-nothing environments. However, all the
+proposals that we identified in this class describe sets of
+handlers executing inside the same address space, thus
+eliminating the possibility of distribution.
+<!--l. 118--><p class="indent" >   As regards user-level scheduling, most event-driven hybrid
+models resort to thread pools to execute the application-level
+event-handlers with operating system threads. This is
+interesting in that it allows the application to control the real
+parallelism involved, by configuring the number of OS
+threads that will be spawned. This scheduling layer also
+implies in greater portability than the direct use of OS
+threads.
+<!--l. 127--><p class="indent" >   We next present two proposals of event-driven hybrid
+concurrency: the libasync-smp library&#x00A0;<span class="cite">[<a 
+href="#XDabek:2002:EPR:1133373.1133410">5</a>]</span> and the
+inContext&#x00A0;<span class="cite">[<a 
+href="#Xyoo2011incontext">26</a>]</span> library.
+<!--l. 133--><p class="indent" >   <span 
+class="ptmbi8t-">libasync-smp. </span>Libasync-smp&#x00A0;<span class="cite">[<a 
+href="#XDabek:2002:EPR:1133373.1133410">5</a>]</span> is an extension of the
+libasync&#x00A0;<span class="cite">[<a 
+href="#Xmazieres2001toolkit">15</a>]</span> library &#8211; an event-based library for C/C++
+applications &#8211; that provides parallelism by simultaneously
+executing different callbacks on multiple CPUs.
+<!--l. 139--><p class="indent" >   A libasync-smp program is typically a process with
+one OS thread per available CPU. Each of these threads
+repeatedly executes callbacks (event handlers) it obtains from
+a ready queue. All threads share the global process state:
+global variables, file descriptors, etc. To coordinate this
+access, the library introduces the notion of <span 
+class="ptmri8t-">coloring</span>. Each
+callback is associated to a color (a 32-bit value), which is
+analogous to a mutex. Callbacks with the same color cannot
+be executed in parallel. By default, all callbacks are mutually
+exclusive i.e., they have the same color. This stimulates
+the programmer to introduce callback parallelism in an
+incremental manner.
+<!--l. 155--><p class="indent" >   Libasync-smp does not support distributed execution. The
+entire application runs in a single operating system process
+with a single shared queue of pending events.
+<!--l. 159--><p class="indent" >   <span 
+class="ptmbi8t-">InContext. </span>InContext&#x00A0;<span class="cite">[<a 
+href="#Xyoo2011incontext">26</a>]</span> is an extension to the the
+MACE&#x00A0;<span class="cite">[<a 
+href="#XMACE">13</a>]</span> event-driven system. In MACE, event-handlers
+are atomic and are run in a single thread.
+<!--l. 164--><p class="indent" >   An InContext application is again executed by a pool of
+threads which are assigned to pending event-handlers
+whenever they become idle. Event-handlers can access global
+data, and to control race conditions, the model introduces the
+notion of <span 
+class="ptmri8t-">context</span>. InContext defines three types of contexts:
+<span 
+class="pcrr8t-x-x-90">none</span>, <span 
+class="pcrr8t-x-x-90">anon</span>, and <span 
+class="pcrr8t-x-x-90">global</span>. An event-handler may transition  between different contexts during execution, but its actions
+                                               are restricted by the current context. When running in context
+                                               <span 
+class="pcrr8t-x-x-90">none</span>, the event-handler may not access any global data. In
+                                               context <span 
+class="pcrr8t-x-x-90">anon</span>, event-handlers have read-only access to global
+                                               data, and finally, in context <span 
+class="pcrr8t-x-x-90">global</span>, an event handler may
+                                               read or write global data. <span 
+class="pcrr8t-x-x-90">anon </span>and <span 
+class="pcrr8t-x-x-90">global </span>contexts
+                                               are comparable to read and write locks, but with only
+                                               one instance of readers and writers: the implementation
+                                               guarantees that only one event runs in <span 
+class="pcrr8t-x-x-90">global </span>context at a
+                                               time and that an event handler does no enter the <span 
+class="pcrr8t-x-x-90">anon </span>or
+                                               <span 
+class="pcrr8t-x-x-90">global </span>context before all earlier event handlers executing in
+                                               global context have committed. The programmer must
+                                               annotate the handler manually with the transitions between
+                                               contexts, and it is up to the programmer to guarantee that
+                                               accesses to global variables are executed in the appropriate
+                                               context..
+                                               <!--l. 190--><p class="indent" >      The event-based hybrid concurrency model is simple to
+                                               understand and to implement, and provides the flexibility of
+                                               scheduling traditionally associated with events. However,
+                                               multi-CPU execution brings data races back if event-handlers
+                                               have access to a global memory. The two solutions we have
+                                               described provide the programmer with simplified versions of
+                                               conventional locks to deal with this issue. The colors used by
+                                               libasync-smp correspond closely to mutual exclusion locks.
+                                               By default, all handlers execute under one single lock: when
+                                               the programmer introduces different colors, he is in fact
+                                               introducing different mutexes. InContext, on the other
+                                               hand, provides the programmer with a read-write lock:
+                                               <span 
+class="pcrr8t-x-x-90">none </span>event handlers are the ones that need no lock, <span 
+class="pcrr8t-x-x-90">anon</span>
+                                               handlers are &#8220;readers&#8221; and <span 
+class="pcrr8t-x-x-90">global </span>handlers are &#8220;writers&#8221;.
+                                               The simplification in this case is that a single instance
+                                               of the read/write lock is provided automatically by the
+                                               system.
+                                                  <h4 class="subsectionHead"><span class="titlemark">2.2    </span> <a 
+ id="x1-40002.2"></a>Thread-based Hybrid Concurrency</h4>
+                                               <!--l. 3--><p class="noindent" >As discussed in the introduction of Section&#x00A0;<a 
+href="#x1-20002">2<!--tex4ht:ref: hybridmodels --></a>, this alternative
+                                               corresponds to the extension of cooperative multithreading to
+                                               multi-CPU environments. Proposals for thread-based
+                                               hybrid concurrency support the idea that control flow
+                                               is better expressed through threads, and that the main
+                                               problems with threads can be &#8220;fixed&#8221; by a user-level
+                                               implementation based on events&#x00A0;<span class="cite">[<a 
+href="#Xcapriccio">4</a>]</span>. Figure&#x00A0;<a 
+href="#x1-40013">3<!--tex4ht:ref: fig:thread_hybrid_concurrency --></a> shows
+                                               a graphical representation of the components of such
+                                               models.
+                                               <!--l. 14--><p class="indent" >      <hr class="figure"><div class="figure" 
+>
+
+<a 
+ id="x1-40013"></a>
+
+<!--l. 16--><p class="noindent" ><img 
+src="rb-resd2x.png" alt="PIC" class="graphics"><!--tex4ht:graphics  
+name="rb-resd2x.png" src="./pics/threadhybrid.pdf"  
+-->
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;3: </span><span  
+class="content">Thread-based hybrid concurrency model.</span></div><!--tex4ht:label?: x1-40013 -->
+
+<!--l. 19--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 22--><p class="indent" >   As in the single CPU case&#x00A0;<span class="cite">[<a 
+href="#XAdya:2002">1</a>]</span>, blocking system calls are
+translated into asynchronous calls (events) through the use of
+wrappers. Control flow is cooperatively passed to the
+scheduler and the state of the user-level thread is maintained
+while its execution is suspended. Upon the completion of the
+requested operation, the scheduler restores the state of
+the thread and resumes its execution, hiding from the
+programmer the inversion of control that is typical of events.
+To make inversion of control transparent, these systems
+can resort to continuations&#x00A0;<span class="cite">[<a 
+href="#XLi:2007">14</a>]</span> or to coroutines and
+closures&#x00A0;<span class="cite">[<a 
+href="#Xcapriccio">4</a>,&#x00A0;<a 
+href="#Xsilvestre10">21</a>]</span>.
+<!--l. 34--><p class="indent" >   The effective use of multiple CPUs is again attained with a
+pool of OS threads. The user-level scheduler may run an
+arbitrary number of concurrent event loops, which are
+constantly consuming events from the event queue. In some
+cases, specific event loops are assigned for dealing with
+specific operations (such as blocking system calls or
+dealing with network operations), and have exclusive event
+queues.
+<!--l. 44--><p class="indent" >   User-level implementations allow for flexible scheduling
+and avoid the overhead of OS context switches, but, again,
+when executed in multiple OS threads, can be subject to data
+races and cache issues. Each of the systems in this class deals
+with this issue in a specific way.
+<!--l. 50--><p class="indent" >   We next present three implementations that employ
+thread-based hybrid concurrency: the Capriccio thread
+package&#x00A0;<span class="cite">[<a 
+href="#Xcapriccio">4</a>]</span>, which uses coroutines to transform a seemingly
+threaded program into a cooperatively-scheduled event-driven
+program with the same behavior; the Scala actors library&#x00A0;<span class="cite">[<a 
+href="#XHaller:2007:AUT:1764606.1764620">9</a>]</span>,
+which is inspired by the actor paradigm; and the proposal of
+Li and Zdancewic&#x00A0;<span class="cite">[<a 
+href="#XLi:2007">14</a>]</span>, which uses Haskell monads to offer a
+thread abstraction implemented by an event-driven execution
+engine.
+<!--l. 62--><p class="indent" >   <span 
+class="ptmbi8t-">Capriccio </span>Capriccio&#x00A0;<span class="cite">[<a 
+href="#Xcapriccio">4</a>]</span> is a C library and that provides a
+POSIX threads&#x00A0;<span class="cite">[<a 
+href="#Xpthreads">12</a>]</span> compatible API using user-level
+cooperative threads. Cooperative multitasking is implemented
+with coroutines&#x00A0;<span class="cite">[<a 
+href="#XCoroutines">6</a>]</span>. Capriccio provides wrappers to I/O
+blocking functions that call asynchronous I/O counterparts
+and yield control back to the scheduler.
+<!--l. 71--><p class="indent" >   One interesting feature of Capriccio is the way it
+explores the flexibility of user-level scheduling. The system
+acquires information about resource usage and blocking
+frequency of each user-level thread along execution.
+The scheduler can use this information to implement
+different policies, such as giving priority to threads that are
+nearer completion or to threads that will shortly release
+resources.
+<!--l. 80--><p class="indent" >   Capriccio&#8217;s implementation is for a single-CPU architecture,
+and thus benefits from the atomicity derived from cooperative
+multithreading in this environment. This and the library&#8217;s
+scheduling model preclude Cappricio&#8217;s usage in distributed
+environments.
+<!--l. 87--><p class="indent" >   <span 
+class="ptmbi8t-">Scala Actors. </span>The actor model&#x00A0;<span class="cite">[<a 
+href="#Xagha1985actors">2</a>]</span> describes a distributed application as a set of objects that interact through
+                                               asynchronous messages. The Scala actors library&#x00A0;<span class="cite">[<a 
+href="#XHaller:2007:AUT:1764606.1764620">9</a>]</span>
+                                               provides support for receiving messages in two alternative
+                                               ways. The first one is a thread-style <span 
+class="pcrr8t-x-x-90">receive</span>, which will
+                                               block the current thread until the expected message is
+                                               available. The second form is the non-blocking <span 
+class="pcrr8t-x-x-90">react</span>,
+                                               which encapsulates the code to be executed upon message
+                                               arrival in a continuation of the current computation. This
+                                               continuation, which is resumed only when the expected
+                                               message becomes available, represents the suspended
+                                               actor.
+                                               <!--l. 100--><p class="indent" >      Once again, support for multi-CPU concurrency is
+                                               provided by a pool of <span 
+class="ptmri8t-">worker </span>threads (defined by the
+                                               underlying Java virtual machine) which repeatedly fetch work
+                                               to execute from a queue of tasks. Tasks are generated either
+                                               by spawning a new actor or by a matching <span 
+class="pcrr8t-x-x-90">send</span>/<span 
+class="pcrr8t-x-x-90">react </span>pair.
+                                               In the latter case, the new task is a closure containing the
+                                               continuation of the receiving actor. A worker thread is
+                                               released either when its associated actor terminates or when it
+                                               executes <span 
+class="pcrr8t-x-x-90">react</span>. To deal with the chance that all worker
+                                               threads become blocked, the library implements a simple
+                                               scheduling policy: if there is at least one task in the queue and
+                                               all worker threads are blocked, a new worker thread is
+                                               created.
+                                               <!--l. 115--><p class="indent" >      Because Scala actors are implemented as Java objects, the
+                                               restriction that they communicate only through message
+                                               passing is left to programmer discipline&#x00A0;<span class="cite">[<a 
+href="#Xscala">16</a>]</span>. Object
+                                               references passed in messages can easily be shared among
+                                               actors and thus will be subject to conventional data sharing
+                                               issues.
+                                               <!--l. 121--><p class="indent" >      The actor concurrency model is a convenient model for
+                                               use in distributed memory settings, although the authors
+                                               have not explored the Scala actor library in distributed
+                                               architectures.
+                                               <!--l. 126--><p class="indent" >      <span 
+class="ptmbi8t-">Monadic hybrid concurrency. </span>Li and Zdancewic&#x00A0;<span class="cite">[<a 
+href="#XLi:2007">14</a>]</span>
+                                               explore features of the Haskell programming language to
+                                               implement a cooperative multitasking library which has much
+                                               in common with Capriccio. In their proposal, application code
+                                               is written sequentially on a user-level thread abstraction.
+                                               using the Haskell &#8217;do&#8217; syntax.
+                                               <!--l. 135--><p class="indent" >      Each user-level thread is represented internally as a
+                                               sequence of steps punctuated by system calls which are the
+                                               potentially blocking points. The queue of ready tasks contains
+                                               continuations of user-level threads. A pool of operating
+                                               system threads repeatedly takes one of these continations and
+                                               executes it up to the next system call. Depending on its
+                                               nature, this system call may be dispatched to a separate
+                                               event loop. When the system call results are available,
+                                               the updated continuation of the task is put in the ready
+                                               task queue. Haskell&#8217;s lazy evaluation is important for
+                                               controlling the execution of the sequential execution
+                                               steps.
+                                               <!--l. 148--><p class="indent" >      This approach is very similar to the Capriccio user-thread
+                                               mechanism, with the difference that it hides control inversion
+
+using continuations instead of coroutines. To represent
+continuations, Li and Zdancewic use CPS monads.
+<!--l. 153--><p class="indent" >   The system assumes that all steps are thread-safe and can
+be performed in parallel. This is made easier by programming
+in a functional language, Timing dependent I/O, or any
+other thread-unsafe operations, can be handled either by
+using separate, sequential, event loops, or by explicit
+synchronization primitives.
+<!--l. 160--><p class="indent" >   Distributed-memory environments are not considered, and
+it is not intuitive how this proposal could be extended to
+address them.
+   <h4 class="subsectionHead"><span class="titlemark">2.3    </span> <a 
+ id="x1-50002.3"></a>Staged Concurrency</h4>
+<!--l. 3--><p class="noindent" >The staged concurrency model introduces a modular approach
+for the design of concurrent systems combining events and
+threads. In this approach, the processing of tasks is divided
+into a series of self-contained modules (<span 
+class="ptmri8t-">stages</span>) connected by
+event queues.
+<!--l. 8--><p class="indent" >   Each stage has its own event handler &#8211; which implements
+the stage&#8217;s functionality &#8211; and a thread pool. The threads in
+the pool remove events from the stage&#8217;s input queue and
+execute parallel instances of the event handler. Typically, the
+processing of an event generates one or more events that are
+dispatched to other stages, until the processing of the
+corresponding task is completed. Figure&#x00A0;<a 
+href="#x1-50014">4<!--tex4ht:ref: fig:staged_hybrid_concurrency --></a> illustrates the basic
+components of the staged concurrency model.
+<!--l. 18--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+
+<a 
+ id="x1-50014"></a>
+
+<!--l. 20--><p class="noindent" ><img 
+src="rb-resd3x.png" alt="PIC" class="graphics"><!--tex4ht:graphics  
+name="rb-resd3x.png" src="pics/stagedhybrid.pdf"  
+-->
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;4: </span><span  
+class="content">Staged concurrency model.</span></div><!--tex4ht:label?: x1-50014 -->
+
+<!--l. 23--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 25--><p class="indent" >   Systems using the staged approach typically explore its
+modularity to tune task scheduling and resource sharing.
+Scheduling policies are local to each stage, thus allowing
+systems to control the level of concurrency at a finer grain
+and to employ appropriate scheduling policies for the
+specific characteristics of each stage. Stages can also be
+convenient barriers for controlling access to memory or other
+resources.
+<!--l. 34--><p class="indent" >   The concept of <span 
+class="ptmri8t-">stages </span>was introduced by the work on
+SEDA (Staged Event-Driven Architecture)&#x00A0;<span class="cite">[<a 
+href="#XWelsh:2001:SAW:502059.502057">25</a>]</span>. Although
+the original architecture is designed for a single host, the
+staged model can be quite naturally extended to distributed
+memory environments.
+<!--l. 39--><p class="indent" >   We next discuss three approaches in the staged concurrency
+class: the SEDA architecture itself; MEDA&#x00A0;<span class="cite">[<a 
+href="#XMEDA">10</a>]</span>, focused on
+master-worker applications, and the Aspen programming
+language&#x00A0;<span class="cite">[<a 
+href="#XUpadhyaya:2007:EEC:1229428.1229433">22</a>]</span>.
+<!--l. 43--><p class="indent" >   <span 
+class="ptmbi8t-">SEDA. </span>The Staged Event-Driven Architecture (SEDA)
+was designed for implementing highly-concurrent servers. In
+SEDA, a user&#8217;s request is wrapped as an event, and is
+processed by series of stages connected through event
+queues.
+<!--l. 49--><p class="indent" >   A SEDA stage, pictured in Figure&#x00A0;<a 
+href="#x1-50025">5<!--tex4ht:ref: fig:stage --></a>, is composed by an
+event queue, a thread pool, a <span 
+class="ptmri8t-">controller</span>, and an event
+handler. Each stage acts as an independent multithreaded
+event-driven entity. Stages may block internally (for example,
+by invoking a library routine or blocking I/O call), and
+use multiple threads for concurrency. The controller is
+responsible for scheduling event handling and adjusting the
+stage concurrency level. In order to do this, it monitors
+information such as input queue length, response time, and
+throughput.
+<!--l. 60--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+
+<a 
+ id="x1-50025"></a>
+
+<!--l. 62--><p class="noindent" ><img 
+src="rb-resd4x.png" alt="PIC" class="graphics"><!--tex4ht:graphics  
+name="rb-resd4x.png" src="pics/stage.pdf"  
+-->
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;5: </span><span  
+class="content">A SEDA stage.</span></div><!--tex4ht:label?: x1-50025 -->
+
+<!--l. 65--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 67--><p class="indent" >   The support for modularity and adaptive concurrency
+control makes SEDA a widely studied approach <span class="cite">[<a 
+href="#XGordon10">8</a>,&#x00A0;<a 
+href="#XHarizopoulos03">11</a>,&#x00A0;<a 
+href="#XUpadhyaya:2007:EEC:1229428.1229433">22</a>]</span>.
+<!--l. 70--><p class="indent" >   In the original SEDA design, all stages were executed
+inside a single OS process, leaving memory isolation to
+programmer discipline. Besides, connections between
+different stages are achieved by a shared memory queue,
+making the design unsuitable for distributed memory
+environments.
+<!--l. 77--><p class="indent" >   <span 
+class="ptmbi8t-">MEDA. </span>MEDA&#x00A0;<span class="cite">[<a 
+href="#XMEDA">10</a>]</span> is a staged architecture based on
+SEDA, specifically designed to address the master-worker
+paradigm, commonly used in parallel programming.
+<!--l. 83--><p class="indent" >   MEDA takes advantage of the fact that master-worker
+applications are naturally structured in stages. The master
+typically executes initialization, work distribution, and result
+collection/combination steps. Workers typically process
+work units and return results to the master. In the MEDA
+architexture, there are pre-defined stages corresponding to
+these steps. Worker stages are replicated throughout the
+network.
+<!--l. 92--><p class="indent" >   MEDA&#8217;s goal from the beginning was to extend SEDA&#8217;s
+single host model to distributed memory environments. SEDA
+event queues are implemented in MEDA as <span 
+class="ptmri8t-">network queues</span>,
+providing each stage with handlers for remote queues which
+can be implemented in a different OS process or in a different
+host. MEDA makes no provision for concurrency control
+inside each stage.
+<!--l. 100--><p class="indent" >   The authors explore the flexibility of user-level scheduling
+to increase throughput and responsiveness by introducing
+priorities in the handling of event queues.
+<!--l. 104--><p class="indent" >   <span 
+class="ptmbi8t-">Aspen. </span>An Aspen&#x00A0;<span class="cite">[<a 
+href="#XUpadhyaya:2007:EEC:1229428.1229433">22</a>]</span> program is structured as a
+collection of modules. Similarly to the approach taken
+by SEDA, modules communicate through queues of
+events, bringing the concept of stages to the programming
+language level. Each Aspen module has an input event queue
+and one or more output queues. Connections between
+modules, associating output queues to specific stages, are
+defined in the application code, in a separate configuration
+file.
+<!--l. 116--><p class="indent" >   Aspen is intended for coding network services, including
+connection-oriented servers. This type of application is
+specifically supported by introducing the concept of <span 
+class="ptmri8t-">flow</span>,
+which captures the idea of work elements that must be
+processed in sequential order. Aspen assigns all work
+elements in the same flow to a single worker thread, ensuring
+sequentiality.
+<!--l. 124--><p class="indent" >   Each Aspen module has its separate addressing space:
+variables and file descriptors are private to each module. This
+avoids data sharing issues and allows the Aspen model to be
+implemented in distributed memory environments.
+<!--l. 129--><p class="indent" >   Internally to each module, Aspen makes some provisions for
+avoiding race conditions. In the first place, the programmer
+can specify <span 
+class="ptmri8t-">per-flow variables</span>. Aspen automatically creates a
+copy of such variables for each flow. This facilitates       maintaining state between work elements in a single flow,
+                                               allowing the use of a module&#8217;s global memory in a protected
+                                               way. Secondly, the Aspen model does not allow parallel
+                                               execution of flows that access shared resources (either
+                                               memory or files).
+                                                  <h3 class="sectionHead"><span class="titlemark">3    </span> <a 
+ id="x1-60003"></a>Discussion</h3>
+                                               <!--l. 3--><p class="noindent" >When writing a concurrent system, the model to be chosen
+                                               depends heavily on the granularity of the tasks to be executed
+                                               in parallel. This granularity, as well as the performance and
+                                               scalability requirements, will define the best choice.
+                                               <!--l. 9--><p class="indent" >      To discuss the relationship between granularity and
+                                               concurrency model, we will once again turn to Figure&#x00A0;<a 
+href="#x1-20011">1<!--tex4ht:ref: fig:adyaaxes --></a>. In
+                                               plane (a), the &#8220;event-driven&#8221; region was appropriate, in single
+                                               CPU systems, for handling fine-grained concurrency, as
+                                               found in GUIs. Just as events are good for describing
+                                               user-interface handlers, which are typically short chunks of
+                                               code, hybrid event-driven systems remain a convenient way of
+                                               coding short handlers in multi-CPU environments, in plane
+                                               (b).
+                                               <!--l. 18--><p class="indent" >      For coarser-grained applications, threads are seen as the
+                                               best abstraction for the programmer. To benefit from the
+                                               advantages of cooperative task management, in plane (a) the
+                                               &#8220;cooperative multithreading" region is the sweet spot
+                                               indicated by&#x00A0;<span class="cite">[<a 
+href="#XAdya:2002">1</a>]</span>. In plane (b), the corresponding region is the
+                                               hybrid thread-based model. In this model, control flows are
+                                               transparently broken up in chunks typically delimited by
+                                               blocking system calls.
+                                               <!--l. 26--><p class="indent" >      The staged model maintains this same idea of decomposing
+                                               control flow in a series of steps, with the difference that
+                                               these tasks have a larger granularity and that the task of
+                                               breaking up the application is assigned to the programmer,
+                                               because it depends on the structure he envisions for the
+                                               application.
+                                               <!--l. 32--><p class="indent" >      Both the thread-based and the staged hybrid models can
+                                               be appropriate to describe large control flows. The difference
+                                               between them arises when analysing issues of resource
+                                               sharing, distribution, and performance.
+                                               <!--l. 37--><p class="indent" >      As regards solutions for controlling resource sharing and
+                                               supporting distributed memory environments, staged models
+                                               naturally pave the way. It is natural to associate each stage to
+                                               a separate addressing space, thus allowing stages to be
+                                               executed in different hosts and reducing the problem of data
+                                               sharing to the internal context of each stage. However, in
+                                               some cases it is necessary for different steps to share
+                                               information, when steps are tightly coupled. In this case, it
+                                               may be more convenient to use a thread-based system, or
+                                               even, in a staged-based model, combine tightly coupled steps
+                                               in a single stage.
+                                               <!--l. 49--><p class="indent" >      Existing staged systems have not, in general, payed much
+                                               attention to the issue of internal concurrency. The exception is
+
+the Aspen model, which enforces protection of global data,
+although the initial prototype of the system does not
+include this enforcement. One idea would be to apply
+one of the approaches described for event-based hybrid
+systems, such as the event coloring of libasync-smp, or the
+event execution contexts of InContext. Another idea
+would be to avoid memory sharing among worker threads,
+using message-passing also for communication among
+event-handlers inside a stage&#x00A0;<span class="cite">[<a 
+href="#XAlua">23</a>,&#x00A0;<a 
+href="#Xerlang">3</a>]</span>.
+<!--l. 62--><p class="indent" >   As regards performance, the choice of a model will
+depend heavily on the metrics of interest. Event queues can
+result in unbounded latencies, which are unaceptable in most
+application scenarios that have real-time requirements. The
+main problem with the use of staged concurrency in
+scenarios that need low latency is the cost of enqueing
+dequeuing units of work at each stage&#x00A0;<span class="cite">[<a 
+href="#XGordon10">8</a>]</span>. In such scenarios,
+thread-based hybrid models can be useful. On the other hand,
+staged concurrency maintains high throughput when low
+latency is not a major requirement, such as on image
+processing applications&#x00A0;<span class="cite">[<a 
+href="#XGordon10">8</a>]</span> or video-on-demand streaming
+servers&#x00A0;<span class="cite">[<a 
+href="#XUpadhyaya:2007:EEC:1229428.1229433">22</a>]</span>.
+<!--l. 75--><p class="indent" >   Systems based on the staged model can also offer
+performance gains due to the possibility of fine tuning. Each
+stage can handle events with a different scheduling policy,
+according to its granularity and resource requirements. Stage
+controllers can monitor event queues and identify unwanted
+delays. The programmer can split stages or combine them to
+improve latency or throughput. Event and thread-based
+systems offer less flexibility. Thread pools can grow and
+shrink dynamically, but they are typically limited by the host&#8217;s
+resources.
+<!--l. 87--><p class="indent" >   The current popularity of elastic computing and
+virtualization emphasize the value of shared-nothing models.
+One alternative for adapting event and thread-based hybrid
+systems to distributed memory architectures is to replicate the
+execution environment across multiple hosts and to balance
+the workload among available processes.
+<!--l. 94--><p class="indent" >   Not only servers but computing-intensive applications can
+also benefit from hybrid concurrency. The MapReduce
+model for processing large datasets on shared-nothing
+environments&#x00A0;<span class="cite">[<a 
+href="#Xghemawat2004mapreduce">7</a>]</span> is an example of aplication pattern that can
+be implemented over a master/worker infrastructure like
+MEDA.
+<!--l. 215--><p class="indent" >   
+   <h3 class="sectionHead"><span class="titlemark">4    </span> <a 
+ id="x1-70004"></a>Conclusion</h3>
+<!--l. 217--><p class="noindent" >Hybrid concurrency models attempt to combine the
+expressiveness of threads with the flexibility of event-driven
+systems, exposing, to different degrees, control of the
+scheduler to the programmer. User-level scheduling seems to
+be an important mechanism for attaining flexibility and     control. However, it remains a difficult facility to implement,
+                                               usually needing wrappers and transformations that do not
+                                               always integrate seamlessly.
+                                               <!--l. 227--><p class="indent" >      In 2000, Schmidt and others described a set of hybrid
+                                               concurrency models in their book on programming
+                                               patterns&#x00A0;<span class="cite">[<a 
+href="#Xschmidtpatterns00">20</a>]</span>. Some of these models and other new ones were
+                                               proposed over the following ten years. In this paper, we tried
+                                               to understand the differences and similarities among existing
+                                               proposals and to identify how they address issues that are
+                                               important in today&#8217;s scenarios.
+                                               <!--l. 235--><p class="indent" >      Pai et al.&#x00A0;<span class="cite">[<a 
+href="#Xpai1999flash">18</a>]</span> proposed an classification of concurrency
+                                               models for the specific case of server applications. They
+                                               identify four types of servers, some of which can be seen as
+                                               using the hybrid concurrency model; however, they are not
+                                               interested in the combination of concurrency models, and
+                                               their goal is to evaluate the architecture they propose in
+                                               comparison to these alternative web-server implementations.
+                                               Li and Zdancewic&#x00A0;<span class="cite">[<a 
+href="#XLi:2007">14</a>]</span> provide valuable insight into the
+                                               advantages of combining threads and events and the general
+                                               structure they present for a hybrid architecture was helpful
+                                               when building the diagrams that we used to represent each of
+                                               the hybrid models.
+                                               <!--l. 251--><p class="indent" >      We have proposed a classification of hybrid concurrency
+                                               that focuses on the abstraction that is offered to programmers
+                                               and on the resulting application structures. With this
+                                               approach, we have come to the conclusion that thread based
+                                               and stage based hybrid models can be seen as similar in
+                                               structure but different in granularity, flexibility and in
+                                               their treatment of the control inversion that is typical of
+                                               events.
+                                               <!--l. 261--><p class="indent" >      Apart from the of inversion of control, the examples we
+                                               described have different solutions to the problems of resource
+                                               sharing, thread-pool control, and communication. Dealing
+                                               with these issues directly in the concurrency infrastructure
+                                               facilitates elegant implementations of applications because
+                                               programmers become free to focus on the core logic of the
+                                               application instead of worrying about synchronizing access to
+                                               shared memory or delegating tasks to each active thread on
+                                               the system, but may limit system usability. Besides, some of
+                                               these issues &#8212; for instance, the control of access to shared
+                                               memory &#8212; do not yet have a clear solution even for a specific
+                                               class of applications.
+                                                  <h3 class="likesectionHead"><a 
+ id="x1-80004"></a>1pt plus 0.3ex</h3>
+                                               <!--l. 1--><p class="noindent" >
+                                                    <div class="thebibliography">
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                 [1]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XAdya:2002"></a><span 
+class="ptmrc8t-">A<span 
+class="small-caps">D</span><span 
+class="small-caps">Y</span><span 
+class="small-caps">A</span>,             A.,             H<span 
+class="small-caps">O</span><span 
+class="small-caps">W</span><span 
+class="small-caps">E</span><span 
+class="small-caps">L</span><span 
+class="small-caps">L</span>,             J.,</span>
+                                                    <span 
+class="ptmrc8t-">T<span 
+class="small-caps">H</span><span 
+class="small-caps">E</span><span 
+class="small-caps">I</span><span 
+class="small-caps">M</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span>, M., B<span 
+class="small-caps">O</span><span 
+class="small-caps">L</span><span 
+class="small-caps">O</span><span 
+class="small-caps">S</span><span 
+class="small-caps">K</span><span 
+class="small-caps">Y</span>, W.</span><span 
+class="ptmrc8t-">&#x00A0;J., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> D<span 
+class="small-caps">O</span><span 
+class="small-caps">U</span><span 
+class="small-caps">C</span><span 
+class="small-caps">E</span><span 
+class="small-caps">U</span><span 
+class="small-caps">R</span>,</span>
+                                                    <span 
+class="ptmrc8t-">J.</span><span 
+class="ptmrc8t-">&#x00A0;R.      </span>Cooperative  Task  Management  Without
+                                                    Manual  Stack  Management.      In  <span 
+class="ptmri8t-">Proc.  General</span>
+
+    <span 
+class="ptmri8t-">Track  of  USENIX  Annual  Technical  Conference</span>
+    (Monterey, CA, USA, 2002), pp.&#x00A0;289&#8211;302.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [2]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xagha1985actors"></a><span 
+class="ptmrc8t-">A<span 
+class="small-caps">G</span><span 
+class="small-caps">H</span><span 
+class="small-caps">A</span>,  G.      </span><span 
+class="ptmri8t-">Actors:  a  model  of  concurrent</span>
+    <span 
+class="ptmri8t-">computation  in  distributed  systems</span>.     MIT  Press,
+    Cambridge, MA, USA, 1986.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [3]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xerlang"></a><span 
+class="ptmrc8t-">A<span 
+class="small-caps">R</span><span 
+class="small-caps">M</span><span 
+class="small-caps">S</span><span 
+class="small-caps">T</span><span 
+class="small-caps">R</span><span 
+class="small-caps">O</span><span 
+class="small-caps">N</span><span 
+class="small-caps">G</span>,  J.,  V<span 
+class="small-caps">I</span><span 
+class="small-caps">R</span><span 
+class="small-caps">D</span><span 
+class="small-caps">I</span><span 
+class="small-caps">N</span><span 
+class="small-caps">G</span>,  R.,  W<span 
+class="small-caps">I</span><span 
+class="small-caps">K</span><span 
+class="small-caps">S</span><span 
+class="small-caps">T</span><span 
+class="small-caps">R</span></span><span 
+class="ptmrc8t-">ö<span 
+class="small-caps">M</span>,</span>
+    <span 
+class="ptmrc8t-">C., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> W<span 
+class="small-caps">I</span><span 
+class="small-caps">L</span><span 
+class="small-caps">L</span><span 
+class="small-caps">I</span><span 
+class="small-caps">A</span><span 
+class="small-caps">M</span><span 
+class="small-caps">S</span>, M. </span><span 
+class="ptmri8t-">Concurrent Programming</span>
+    <span 
+class="ptmri8t-">in ERLANG</span>. Prentice Hall, 1996.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [4]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xcapriccio"></a><span 
+class="ptmrc8t-">B<span 
+class="small-caps">E</span><span 
+class="small-caps">H</span><span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">N</span>,   R.</span><span 
+class="ptmrc8t-">&#x00A0;V.,   C<span 
+class="small-caps">O</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span><span 
+class="small-caps">I</span><span 
+class="small-caps">T</span>,   J.,   Z<span 
+class="small-caps">H</span><span 
+class="small-caps">O</span><span 
+class="small-caps">U</span>,   F.,</span>
+    <span 
+class="ptmrc8t-">N<span 
+class="small-caps">E</span><span 
+class="small-caps">C</span><span 
+class="small-caps">U</span><span 
+class="small-caps">L</span><span 
+class="small-caps">A</span>,  G.</span><span 
+class="ptmrc8t-">&#x00A0;C.,  <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  B<span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">W</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span>,  E.    </span>Capriccio:
+    Scalable threads for internet services. In <span 
+class="ptmri8t-">Proc. 19th.</span>
+    <span 
+class="ptmri8t-">ACM Symposium on Operating Systems Principles</span>
+    (Bolton Landing, NY USA, 2003), pp.&#x00A0;268&#8211;281.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [5]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XDabek:2002:EPR:1133373.1133410"></a><span 
+class="ptmrc8t-">D<span 
+class="small-caps">A</span><span 
+class="small-caps">B</span><span 
+class="small-caps">E</span><span 
+class="small-caps">K</span>, F., Z<span 
+class="small-caps">E</span><span 
+class="small-caps">L</span><span 
+class="small-caps">D</span><span 
+class="small-caps">O</span><span 
+class="small-caps">V</span><span 
+class="small-caps">I</span><span 
+class="small-caps">C</span><span 
+class="small-caps">H</span>, N., K<span 
+class="small-caps">A</span><span 
+class="small-caps">A</span><span 
+class="small-caps">S</span><span 
+class="small-caps">H</span><span 
+class="small-caps">O</span><span 
+class="small-caps">E</span><span 
+class="small-caps">K</span>, F.,</span>
+    <span 
+class="ptmrc8t-">M<span 
+class="small-caps">A</span><span 
+class="small-caps">Z</span><span 
+class="small-caps">I</span></span><span 
+class="ptmrc8t-">è<span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">S</span>,  D.,  <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  M<span 
+class="small-caps">O</span><span 
+class="small-caps">R</span><span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">S</span>,  R.   </span>Event-driven
+    programming  for  robust  software.    In  <span 
+class="ptmri8t-">Proc.  10th.</span>
+    <span 
+class="ptmri8t-">workshop  on  ACM  SIGOPS  European  workshop</span>
+    (New York, NY, USA, 2002), EW 10, pp.&#x00A0;186&#8211;189.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [6]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XCoroutines"></a><span 
+class="ptmrc8t-"><span 
+class="small-caps">D</span><span 
+class="small-caps">E</span></span><span 
+class="ptmrc8t-">&#x00A0;M<span 
+class="small-caps">O</span><span 
+class="small-caps">U</span><span 
+class="small-caps">R</span><span 
+class="small-caps">A</span>,  A.</span><span 
+class="ptmrc8t-">&#x00A0;L.,  <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  I<span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">U</span><span 
+class="small-caps">S</span><span 
+class="small-caps">A</span><span 
+class="small-caps">L</span><span 
+class="small-caps">I</span><span 
+class="small-caps">M</span><span 
+class="small-caps">S</span><span 
+class="small-caps">C</span><span 
+class="small-caps">H</span><span 
+class="small-caps">Y</span>,</span>
+    <span 
+class="ptmrc8t-">R.    </span>Revisiting  coroutines.    <span 
+class="ptmri8t-">ACM  Transactions  on</span>
+    <span 
+class="ptmri8t-">Programming  Languages  and  Systems  (TOPLAS)</span>
+    <span 
+class="ptmri8t-">31</span>, 2 (Feb. 2009).
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [7]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xghemawat2004mapreduce"></a><span 
+class="ptmrc8t-">G<span 
+class="small-caps">H</span><span 
+class="small-caps">E</span><span 
+class="small-caps">M</span><span 
+class="small-caps">A</span><span 
+class="small-caps">W</span><span 
+class="small-caps">A</span><span 
+class="small-caps">T</span>,  S.,  <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  D<span 
+class="small-caps">E</span><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span>,  J.   </span>Mapreduce:
+    Simplified  data  processing  on  large  clusters.    In
+    <span 
+class="ptmri8t-">Proc. 6th. Symposium on Operating System Design</span>
+    <span 
+class="ptmri8t-">and Implementation (OSDI&#8217;04), San Francisco, CA,</span>
+    <span 
+class="ptmri8t-">USA </span>(2004).
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+  [8]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XGordon10"></a><span 
+class="ptmrc8t-">G<span 
+class="small-caps">O</span><span 
+class="small-caps">R</span><span 
+class="small-caps">D</span><span 
+class="small-caps">O</span><span 
+class="small-caps">N</span>,   M.</span><span 
+class="ptmrc8t-">&#x00A0;E.         </span><span 
+class="ptmri8t-">Stage   scheduling   for</span>
+    <span 
+class="ptmri8t-">CPU-intensive  servers</span>.   PhD  thesis,  University  of
+    Cambridge, Computer Laboratory, 2010.
+    </p>                                               <p class="bibitem" ><span class="biblabel">
+                                                 [9]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XHaller:2007:AUT:1764606.1764620"></a><span 
+class="ptmrc8t-">H<span 
+class="small-caps">A</span><span 
+class="small-caps">L</span><span 
+class="small-caps">L</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span>, P., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> O<span 
+class="small-caps">D</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">S</span><span 
+class="small-caps">K</span><span 
+class="small-caps">Y</span>, M.   </span>Actors that
+                                                    unify threads and events. In <span 
+class="ptmri8t-">Proc. 9th. International</span>
+                                                    <span 
+class="ptmri8t-">Conference on Coordination Models and Languages</span>
+                                                    (Paphos, Cyprus, 2007), pp.&#x00A0;171&#8211;190.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [10]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XMEDA"></a><span 
+class="ptmrc8t-">H<span 
+class="small-caps">A</span><span 
+class="small-caps">N</span>, B., L<span 
+class="small-caps">U</span><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span>, Z., Z<span 
+class="small-caps">H</span><span 
+class="small-caps">U</span>, D., R<span 
+class="small-caps">E</span><span 
+class="small-caps">N</span>, Y., C<span 
+class="small-caps">H</span><span 
+class="small-caps">E</span><span 
+class="small-caps">N</span>,</span>
+                                                    <span 
+class="ptmrc8t-">T.,   W<span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">G</span>,   Y.,   <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>   W<span 
+class="small-caps">U</span>,   Z.      </span>An   improved
+                                                    staged event driven architecture for Master-Worker
+                                                    network computing.  In <span 
+class="ptmri8t-">Cyber-Enabled Distributed</span>
+                                                    <span 
+class="ptmri8t-">Computing and Knowledge Discovery. CyberC &#8217;09</span>
+                                                    (Zhangjiajie, China, 2009), pp.&#x00A0;184&#8211;190.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [11]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XHarizopoulos03"></a><span 
+class="ptmrc8t-">H<span 
+class="small-caps">A</span><span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">Z</span><span 
+class="small-caps">O</span><span 
+class="small-caps">P</span><span 
+class="small-caps">O</span><span 
+class="small-caps">U</span><span 
+class="small-caps">L</span><span 
+class="small-caps">O</span><span 
+class="small-caps">S</span>,   S.       </span>A   Case   for   Staged
+                                                    Database  Systems.    In  <span 
+class="ptmri8t-">Proc.  1st.  Conference  on</span>
+                                                    <span 
+class="ptmri8t-">Innovative Data Systems Research </span>(Asilomar, CA,
+                                                    USA, 2003).
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [12]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xpthreads"></a><span 
+class="ptmrc8t-">IEEE/ANSI</span>.   Std.  1003.1:  Portable  operating
+                                                    system interface (posix) &#8211; part 1: System application
+                                                    program  interface  (api).      Tech.  Rep.  Including
+                                                    1003.1c:   Amendment   2:   Threads   Extension   C
+                                                    Language., ANSI/IEEE, 1996.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [13]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XMACE"></a><span 
+class="ptmrc8t-">K<span 
+class="small-caps">I</span><span 
+class="small-caps">L</span><span 
+class="small-caps">L</span><span 
+class="small-caps">I</span><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span>, C., A<span 
+class="small-caps">N</span><span 
+class="small-caps">D</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">S</span><span 
+class="small-caps">O</span><span 
+class="small-caps">N</span>, J.</span><span 
+class="ptmrc8t-">&#x00A0;W., B<span 
+class="small-caps">R</span><span 
+class="small-caps">A</span><span 
+class="small-caps">U</span><span 
+class="small-caps">D</span>, R.,</span>
+                                                    <span 
+class="ptmrc8t-">J<span 
+class="small-caps">H</span><span 
+class="small-caps">A</span><span 
+class="small-caps">L</span><span 
+class="small-caps">A</span>,  R.,  <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  V<span 
+class="small-caps">A</span><span 
+class="small-caps">H</span><span 
+class="small-caps">D</span><span 
+class="small-caps">A</span><span 
+class="small-caps">T</span>,  A.   </span>Mace  :  Language
+                                                    Support  for  Building  Distributed  Systems.      In
+                                                    <span 
+class="ptmri8t-">Proc. ACM SIGPLAN Conference on Programming</span>
+                                                    <span 
+class="ptmri8t-">Language Design and Implementation </span>(San Diego,
+                                                    CA, USA, 2007), pp.&#x00A0;179&#8211;188.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [14]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XLi:2007"></a><span 
+class="ptmrc8t-">L<span 
+class="small-caps">I</span>,        P.,        <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>        Z<span 
+class="small-caps">D</span><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">C</span><span 
+class="small-caps">E</span><span 
+class="small-caps">W</span><span 
+class="small-caps">I</span><span 
+class="small-caps">C</span>,        S.</span>
+                                                    Combining events and threads for scalable network
+                                                    services implementation and evaluation of monadic,
+                                                    application-level concurrency primitives.   In <span 
+class="ptmri8t-">Proc.</span>
+                                                    <span 
+class="ptmri8t-">2007 ACM SIGPLAN conference on Programming</span>
+                                                    <span 
+class="ptmri8t-">language  design  and  implementation  </span>(New  York,
+                                                    NY, USA, 2007), PLDI &#8217;07, pp.&#x00A0;189&#8211;199.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [15]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xmazieres2001toolkit"></a><span 
+class="ptmrc8t-">M<span 
+class="small-caps">A</span><span 
+class="small-caps">Z</span><span 
+class="small-caps">I</span></span><span 
+class="ptmrc8t-">è<span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">S</span>,  D.    </span>A  toolkit  for  user-level  file
+                                                    systems.     In  <span 
+class="ptmri8t-">Proc.  Usenix  Technical  Conference</span>
+                                                    (Boston, MA, USA, 2001), pp.&#x00A0;261&#8211;274.
+
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [16]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xscala"></a><span 
+class="ptmrc8t-">O<span 
+class="small-caps">D</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">S</span><span 
+class="small-caps">K</span><span 
+class="small-caps">Y</span>, M., S<span 
+class="small-caps">P</span><span 
+class="small-caps">O</span><span 
+class="small-caps">O</span><span 
+class="small-caps">N</span>, L., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> V<span 
+class="small-caps">E</span><span 
+class="small-caps">N</span><span 
+class="small-caps">N</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">S</span>, B.</span>
+    <span 
+class="ptmri8t-">Programming in Scala</span>. Artima Press, 2008.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [17]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XOusterhout96whythreads"></a><span 
+class="ptmrc8t-">O<span 
+class="small-caps">U</span><span 
+class="small-caps">S</span><span 
+class="small-caps">T</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">H</span><span 
+class="small-caps">O</span><span 
+class="small-caps">U</span><span 
+class="small-caps">T</span>, J. </span>Why Threads Are A Bad Idea
+    (for most purposes), Jan. 1996.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [18]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xpai1999flash"></a><span 
+class="ptmrc8t-">P<span 
+class="small-caps">A</span><span 
+class="small-caps">I</span>,  V.,  D<span 
+class="small-caps">R</span><span 
+class="small-caps">U</span><span 
+class="small-caps">S</span><span 
+class="small-caps">C</span><span 
+class="small-caps">H</span><span 
+class="small-caps">E</span><span 
+class="small-caps">L</span>,  P.,  <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  Z<span 
+class="small-caps">W</span><span 
+class="small-caps">A</span><span 
+class="small-caps">E</span><span 
+class="small-caps">N</span><span 
+class="small-caps">E</span><span 
+class="small-caps">P</span><span 
+class="small-caps">O</span><span 
+class="small-caps">E</span><span 
+class="small-caps">L</span>,</span>
+    <span 
+class="ptmrc8t-">W.    </span>Flash:  An  efficient  and  portable  web  server.
+    In  <span 
+class="ptmri8t-">Proc.  USENIX  Annual  Technical  Conference</span>
+    (1999), USENIX Association, pp.&#x00A0;15&#8211;15.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [19]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xpariag2007comparing"></a><span 
+class="ptmrc8t-">P<span 
+class="small-caps">A</span><span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">A</span><span 
+class="small-caps">G</span>, D., B<span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">C</span><span 
+class="small-caps">H</span><span 
+class="small-caps">T</span>, T., H<span 
+class="small-caps">A</span><span 
+class="small-caps">R</span><span 
+class="small-caps">J</span><span 
+class="small-caps">I</span>, A., B<span 
+class="small-caps">U</span><span 
+class="small-caps">H</span><span 
+class="small-caps">R</span>,</span>
+    <span 
+class="ptmrc8t-">P., S<span 
+class="small-caps">H</span><span 
+class="small-caps">U</span><span 
+class="small-caps">K</span><span 
+class="small-caps">L</span><span 
+class="small-caps">A</span>, A., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> C<span 
+class="small-caps">H</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">T</span><span 
+class="small-caps">O</span><span 
+class="small-caps">N</span>, D.  </span>Comparing
+    the performance of web server architectures.  <span 
+class="ptmri8t-">ACM</span>
+    <span 
+class="ptmri8t-">SIGOPS  Operating  Systems  Review  41</span>,  3  (2007),
+    231&#8211;243.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [20]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xschmidtpatterns00"></a><span 
+class="ptmrc8t-">S<span 
+class="small-caps">C</span><span 
+class="small-caps">H</span><span 
+class="small-caps">M</span><span 
+class="small-caps">I</span><span 
+class="small-caps">D</span><span 
+class="small-caps">T</span>,   D.,   S<span 
+class="small-caps">T</span><span 
+class="small-caps">A</span><span 
+class="small-caps">L</span>,   M.,   R<span 
+class="small-caps">O</span><span 
+class="small-caps">H</span><span 
+class="small-caps">N</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">T</span>,   H.,</span>
+    <span 
+class="ptmrc8t-"><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span>  B<span 
+class="small-caps">U</span><span 
+class="small-caps">S</span><span 
+class="small-caps">C</span><span 
+class="small-caps">H</span><span 
+class="small-caps">M</span><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">N</span>,  F.    </span>Pattern-oriented  software
+    architecture volume 2: Patterns for concurrent and
+    networked objects. Wiley.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [21]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xsilvestre10"></a><span 
+class="ptmrc8t-">S<span 
+class="small-caps">I</span><span 
+class="small-caps">L</span><span 
+class="small-caps">V</span><span 
+class="small-caps">E</span><span 
+class="small-caps">S</span><span 
+class="small-caps">T</span><span 
+class="small-caps">R</span><span 
+class="small-caps">E</span>, B., R<span 
+class="small-caps">O</span><span 
+class="small-caps">S</span><span 
+class="small-caps">S</span><span 
+class="small-caps">E</span><span 
+class="small-caps">T</span><span 
+class="small-caps">T</span><span 
+class="small-caps">O</span>, S., R<span 
+class="small-caps">O</span><span 
+class="small-caps">D</span><span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">G</span><span 
+class="small-caps">U</span><span 
+class="small-caps">E</span><span 
+class="small-caps">Z</span>,</span>
+    <span 
+class="ptmrc8t-">N., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> B<span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">O</span><span 
+class="small-caps">T</span>, J.</span><span 
+class="ptmrc8t-">&#x00A0;P.  </span>Flexibility and coordination
+    in event-based, loosely coupled, distributed systems.
+    <span 
+class="ptmri8t-">Comput. Lang. Syst. Struct. 36</span>, 2 (2010), 142&#8211;157.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [22]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XUpadhyaya:2007:EEC:1229428.1229433"></a><span 
+class="ptmrc8t-">U<span 
+class="small-caps">P</span><span 
+class="small-caps">A</span><span 
+class="small-caps">D</span><span 
+class="small-caps">H</span><span 
+class="small-caps">Y</span><span 
+class="small-caps">A</span><span 
+class="small-caps">Y</span><span 
+class="small-caps">A</span>, G., P<span 
+class="small-caps">A</span><span 
+class="small-caps">I</span>, V.</span><span 
+class="ptmrc8t-">&#x00A0;S., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> M<span 
+class="small-caps">I</span><span 
+class="small-caps">D</span><span 
+class="small-caps">K</span><span 
+class="small-caps">I</span><span 
+class="small-caps">ff</span>,</span>
+    <span 
+class="ptmrc8t-">S.</span><span 
+class="ptmrc8t-">&#x00A0;P.      </span>Expressing   and   exploiting   concurrency
+    in  networked  applications  with  aspen.     In  <span 
+class="ptmri8t-">Proc.</span>
+    <span 
+class="ptmri8t-">12th. ACM SIGPLAN symposium on Principles and</span>
+    <span 
+class="ptmri8t-">practice of parallel programming </span>(New York, NY,
+    USA, 2007), PPoPP &#8217;07, pp.&#x00A0;13&#8211;23.
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ [23]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XAlua"></a><span 
+class="ptmrc8t-">U<span 
+class="small-caps">R</span><span 
+class="small-caps">U</span><span 
+class="small-caps">R</span><span 
+class="small-caps">A</span><span 
+class="small-caps">H</span><span 
+class="small-caps">Y</span>,     C.,     R<span 
+class="small-caps">O</span><span 
+class="small-caps">D</span><span 
+class="small-caps">R</span><span 
+class="small-caps">I</span><span 
+class="small-caps">G</span><span 
+class="small-caps">U</span><span 
+class="small-caps">E</span><span 
+class="small-caps">Z</span>,     N.,     <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span></span>
+    <span 
+class="ptmrc8t-">I<span 
+class="small-caps">E</span><span 
+class="small-caps">R</span><span 
+class="small-caps">U</span><span 
+class="small-caps">S</span><span 
+class="small-caps">A</span><span 
+class="small-caps">L</span><span 
+class="small-caps">I</span><span 
+class="small-caps">M</span><span 
+class="small-caps">S</span><span 
+class="small-caps">C</span><span 
+class="small-caps">H</span><span 
+class="small-caps">Y</span>, R.   </span>Alua: flexibility for parallel
+    programming.    <span 
+class="ptmri8t-">Computer  Languages,  Systems  &amp;</span>
+    <span 
+class="ptmri8t-">Structures 28 </span>(2002), 155&#8211;180.                        </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [24]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xvon"></a><span 
+class="ptmrc8t-"><span 
+class="small-caps">V</span><span 
+class="small-caps">O</span><span 
+class="small-caps">N</span> B<span 
+class="small-caps">E</span><span 
+class="small-caps">H</span><span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">N</span>, R., C<span 
+class="small-caps">O</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span><span 
+class="small-caps">I</span><span 
+class="small-caps">T</span>, J., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> B<span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">W</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span>,</span>
+                                                    <span 
+class="ptmrc8t-">E. </span>Why events are a bad idea (for high-concurrency
+                                                    servers).   In  <span 
+class="ptmri8t-">Proc.  9th.  Conference  on  Hot  Topics</span>
+                                                    <span 
+class="ptmri8t-">in Operating Systems - Volume 9 </span>(Lihue, HI, USA,
+                                                    2003), pp.&#x00A0;4&#8211;4.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [25]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="XWelsh:2001:SAW:502059.502057"></a><span 
+class="ptmrc8t-">W<span 
+class="small-caps">E</span><span 
+class="small-caps">L</span><span 
+class="small-caps">S</span><span 
+class="small-caps">H</span>, M., C<span 
+class="small-caps">U</span><span 
+class="small-caps">L</span><span 
+class="small-caps">L</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span>, D., <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span> B<span 
+class="small-caps">R</span><span 
+class="small-caps">E</span><span 
+class="small-caps">W</span><span 
+class="small-caps">E</span><span 
+class="small-caps">R</span>, E.</span>
+                                                    Seda: an architecture for well-conditioned, scalable
+                                                    internet  services.    <span 
+class="ptmri8t-">SIGOPS  Oper.  Syst.  Rev.  35</span>,  5
+                                                    (2001), 230&#8211;243.
+                                                    </p>
+                                                    <p class="bibitem" ><span class="biblabel">
+                                                [26]<span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span><a 
+ id="Xyoo2011incontext"></a><span 
+class="ptmrc8t-">Y<span 
+class="small-caps">O</span><span 
+class="small-caps">O</span>,   S.,   L<span 
+class="small-caps">E</span><span 
+class="small-caps">E</span>,   H.,   K<span 
+class="small-caps">I</span><span 
+class="small-caps">L</span><span 
+class="small-caps">L</span><span 
+class="small-caps">I</span><span 
+class="small-caps">A</span><span 
+class="small-caps">N</span>,   C.,   <span 
+class="small-caps">A</span><span 
+class="small-caps">N</span><span 
+class="small-caps">D</span></span>
+                                                    <span 
+class="ptmrc8t-">K<span 
+class="small-caps">U</span><span 
+class="small-caps">L</span><span 
+class="small-caps">K</span><span 
+class="small-caps">A</span><span 
+class="small-caps">R</span><span 
+class="small-caps">N</span><span 
+class="small-caps">I</span>,  M.      </span>Incontext:  simple  parallelism
+                                                    for   distributed   applications.        In   <span 
+class="ptmri8t-">Proc.   20th.</span>
+                                                    <span 
+class="ptmri8t-">international   symposium   on   High   performance</span>
+                                                    <span 
+class="ptmri8t-">distributed computing </span>(2011), ACM, pp.&#x00A0;97&#8211;108.
+                                               </p>
+                                                    </div>
+                                                   
+</body></html> 
+
+
+
