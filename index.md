@@ -13,7 +13,7 @@ tagline: <br />
 * Twitter: [TiagoBraw](http://twitter.com/TiagoBraw/)
 * Github: [Salmito](http://github.com/Salmito/)
 * Papers:
-   * [Understanding Hybrid Concurrency Models](papers/rb-resd2001) - Revista Brasileira de Redes de Computadores e Sistemas Distribuídos, v. 4, p. 33-41, 2011.
+   * [Understanding Hybrid Concurrency Models](papers/rb-resd2011) - Revista Brasileira de Redes de Computadores e Sistemas Distribuídos, v. 4, p. 33-41, 2011.
 
 
 
