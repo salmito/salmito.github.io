@@ -142,7 +142,15 @@ p{
 }
 h3{
     color: #000;
-    font-size: 16px;
+    line-height: 1.25em;
+    padding: 0 0 1em 0;
+    text-align: justify;
+    margin-left: 5%;
+    margin-right: 5%;
+
+}
+h4{
+    color: #000;
     line-height: 1.25em;
     padding: 0 0 1em 0;
     text-align: justify;
