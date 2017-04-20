@@ -126,5 +126,29 @@ div.author{white-space: nowrap;}
 .abstract p {margin-left:5%; margin-right:5%;}
 div.abstract {width:100%;}
 .figure img.graphics {margin-left:10%;}
+p{
+    color: #000;
+    font-size: 16px;
+    line-height: 1.25em;
+    padding: 0 0 1em 0;
+    text-align: justify;
+    margin-left: 5%;
+    margin-right: 5%;
+ -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-font-smoothing: antialiased !important;
+  text-rendering: optimizelegibility !important;
+  letter-spacing: .03em;
+}
+h3{
+    color: #000;
+    font-size: 16px;
+    line-height: 1.25em;
+    padding: 0 0 1em 0;
+    text-align: justify;
+    margin-left: 5%;
+    margin-right: 5%;
+
+}
 /* end css.sty */
 
