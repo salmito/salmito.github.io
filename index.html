@@ -48,10 +48,10 @@
 body, html {
   height: 100%;
   margin: 0;
-  font: 400 20px/1.8 "Lato", sans-serif;
+  font: 800 20px/1.8 "Lato", sans-serif;
   color: #777;
 }
-.bgimg-1, .bgimg-2, .bgimg-3 {
+.bgimg-1 {
   position: relative;
   opacity: 0.8;
   background-position: center;
@@ -69,15 +69,14 @@ body, html {
   width: 100%;
   text-align: center;
   color: #111;
-  background-color: #FFF;
+  background-color: rgba(255,255,255,0.6);
   letter-spacing: 10px;
-  opacity: 0.8;
   margin: -15% 0 0 0;
 }
 .caption span.border {
   color: #111;
   padding: 18px;
-  font-size: 25px;
+  font-size: 30px;
 }
 h3 {
   letter-spacing: 5px;
@@ -90,12 +89,13 @@ h3 {
   border: 0px;
 }
 #avatar {
-  width: 200px;
-  border: 0px;
+  width: 150px;
   border-radius: 50%;
   opacity: 1;
   cursor: pointer;
   transition: 0.3s;
+  border-style: solid;
+  border-width: medium;
 }
 #avatar:hover {opacity: 0.7;}
 .modal {
@@ -153,10 +153,10 @@ h3 {
   <div class="caption"><span class="border">
     Tiago Salmito<br>
     <img src="img/avatar.jpg" id="avatar"></br>
-    <a href="https://github.com/salmito"><img src="img/github.svg" class="icon"></a>
-    <a href="linkedin"><img src="img/linkedin.svg" class="icon"></a>
-    <a href="https://twitter.com/TiagoBraw"><img src="img/twitter.svg" class="icon"></a>
-    <a href="https://www.instagram.com/tiagosalmito"><img src="img/instagram.svg" class="icon"></a>
+    <a href="https://github.com/salmito"><img src="img/github.svg" title="Github" class="icon"></a>
+    <a href="linkedin"><img src="img/linkedin.svg" title="Linkedin" class="icon"></a>
+    <a href="https://twitter.com/TiagoBraw"><img src="img/twitter.svg" title="Twitter" class="icon"></a>
+    <a href="https://www.instagram.com/tiagosalmito"><img src="img/instagram.svg" title="Instagram" class="icon"></a>
   </span></div>
 </div>
 
@@ -177,5 +177,17 @@ var span = document.getElementsByClassName("close")[0];
 span.onclick = function() {
   modal.style.display = "none";
 } 
+</script>
+<script type="text/javascript" async="" src="http://www.google-analytics.com/ga.js"></script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19084857-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
 </script>
 </body></html>
